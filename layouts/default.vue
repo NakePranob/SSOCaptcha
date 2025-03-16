@@ -6,11 +6,12 @@ declare global {
             getToken(): Promise<string>;
             hasToken(): boolean;
             fetch(url: string, options?: RequestInit): Promise<Response>;
+        },
+        AwsWafCaptcha: {
+            renderCaptcha(container: HTMLElement, options: any): void;
         }
     }
 }
-
-const AwsWafIntegration = window.AwsWafIntegration;
 
 // runtime config
 const runtimeConfig = useRuntimeConfig();
@@ -27,31 +28,72 @@ const route = useRoute()
 const currentPath = route.path
 
 // Ref variable
+const captchaPending = ref(false);
 const bodyHeight = ref();
 const lang = ref(locale.value as 'en' | 'th')
 const challageError = ref(false);
-
+const captchaContainer = ref<HTMLElement | null>(null);
 watch(lang, (newlang, Oldlang) => {
     setLocale(newlang)
 })
 
-onMounted(() => {
-    const script = document.createElement('script')
-    script.src = runtimeConfig.public.AWS_WAF_INTEGRATION_ENDPOINT
-    script.defer = true
-    script.onload = async () => {
-        if (AwsWafIntegration) {
-            const hasToken = await AwsWafIntegration.hasToken()
-            if (!hasToken) {
-                await AwsWafIntegration.getToken()
-                    .catch(error => challageError.value = true);
+onMounted(async () => {
+    const loadScript = (src: string): Promise<void> => {
+        return new Promise((resolve) => {
+            if (document.querySelector(`script[src="${src}"]`)) {
+                resolve();
+                return;
             }
-        } else {
+            const script = document.createElement('script');
+            script.src = src;
+            script.defer = true;
+            script.onload = () => resolve();
+            document.head.appendChild(script);
+        });
+    };
+
+    // Load AWS WAF scripts
+    await loadScript('https://a2e68e46b9da.edge.captcha-sdk.awswaf.com/a2e68e46b9da/jsapi.js');
+    await loadScript(runtimeConfig.public.AWS_WAF_INTEGRATION_ENDPOINT);
+
+    console.log('window => ', window);
+
+    try {
+        // test captcha
+        throw new Error('test captcha');
+        
+        const AwsWafIntegration = window.AwsWafIntegration;
+        // Handle WAF integration
+        if (!AwsWafIntegration) {
+            throw new Error('AWS WAF Integration failed to load');
+        }
+
+        console.log('AwsWafIntegration => ', AwsWafIntegration);
+
+        const hasToken = await AwsWafIntegration.hasToken();
+        console.log('hasToken => ', hasToken);
+        if (!hasToken) {
+            await AwsWafIntegration.getToken();
+        }
+    } catch (error) {
+        showMyCaptcha();
+        if (captchaPending.value === true) {
             challageError.value = true;
         }
     }
-    document.head.appendChild(script)
-})
+});
+
+const showMyCaptcha = () => {
+    if (captchaContainer.value) {
+        const AwsWafCaptcha = window.AwsWafCaptcha;
+        AwsWafCaptcha.renderCaptcha(captchaContainer.value, {
+            apiKey: "F4e3PjKdfPp4Vm8ss+FbP07Z2RRh8aZfAePhwk27th6+iImzGMo64PdLJTQxmgzoOTsanLmyFr/DgDOyDoPaNv7EpMe+EwLgfR/QUcT79JlHJzGnsFm3PRBAXqYsu6y9xROGDRqmexp+K4pJRXiNbn4GieaY9+4tOeSiXxJRuZkRJ/eZffQUypX1fef4ex6LocVkYJ1GiLBdT96ItJVYLXJfLtN8sb7hetQQEDRGkorbczhPlRilI4v6n8NcZlMdcxnbRxIeWDPbUbkypba4hWvXiYnIiKWzqnip4ONn3TKXGrro+kK22RTT3pYp3xaUQEMio6xEl64S5aAPjYwZMn7xGyxiyuTuZUAs2WJqwWgNlcPCGOo0QjE4WlnCkqWzUIdBfuekDlwdYbExTylF9dBLM7atf0Fx0AGB/U9gIBYAOlg7KcLj6BY2d+kebtXIGRYhSVZmHcPjdi5nEdnvykBsAje9jUdLcIbRHvERBtkytu2UVODCvc5EJ6VOQCMmnpe0oXq24DpnIvYCFrhCJ5cKrlNkiGui2K4Q3TW0s0KnHZHwNs5gjMdu6hb9de43FpKGPz7YYqlQeRIGWXHO6HyNMvhT9LJWTqfizRP4ZRH9rG1yq6I/4X6Vi8aaihJi34YBlEr7gvxyODfZ9jKNe5DVkqRFqB2yW0K+MbelstQ=_1_1",
+            onError: () => {
+                console.log('onError');
+            },
+        });
+    }
+};
 
 onMounted(() => {
     bodyHeight.value = document.body.clientHeight
@@ -183,6 +225,11 @@ const { pending, error } = useAsyncData("policy", async () => {
                 </template>
             </UNotifications>
         </div>
+        <UModal v-model="auth.captchaModalIsOpen" prevent-close>
+            <div class="px-4 py-8 bg-white rounded-lg">
+                <div ref="captchaContainer" class=""></div>
+            </div>
+        </UModal>
     </div>
 </template>
 

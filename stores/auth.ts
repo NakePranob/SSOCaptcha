@@ -3,6 +3,7 @@ import { defineStore } from 'pinia';
 export const useAuthStore = defineStore('auth', {
     state: (): AuthState => ({
         csrf: '',
+        captchaModalIsOpen: true,
         otp: {
             email: '',
             password: '',
@@ -56,6 +57,9 @@ export const useAuthStore = defineStore('auth', {
     actions: {
         setCSRF(token: string) {
             this.csrf = token;
+        },
+        setCaptchaModalIsOpen(isOpen: boolean) {
+            this.captchaModalIsOpen = isOpen;
         },
         setOTP(obj: OTPType) {
             this.otp = obj;
