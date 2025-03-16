@@ -1,0 +1,77 @@
+version: 0.2
+env:
+  variables:
+    # NODE_ENV: production
+    STAGE: $STAGE
+    # COGNITO_OAUTH2_ENDPOINT: https://mauthen-users-username-uat.auth.ap-southeast-1.amazoncognito.com
+    # NUXT_PUBLIC_API_BASE: https://uat-api-mauthen.themall.co.th
+
+  parameter-store:
+    # BASE_URL: mtt-api-endpoint-$STAGE
+    # X_API_KEY: mtt-api-key-$STAGE
+    # M Authen 2.0
+    COGNITO_OAUTH2_ENDPOINT: mauthen-cognito-oauth2-endpoint-$STAGE
+    NUXT_PUBLIC_API_BASE: mauthen-public-api-base-$STAGE
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 22
+  pre_build:
+    commands:
+      - echo Installing Yarn dependencies
+      - npm install -g yarn
+      - yarn
+  build:
+    commands:
+      - echo Build started on `date`
+      # - yarn build
+      - yarn generate
+  post_build:
+    commands:
+      - aws configure set region $AWS_DEFAULT_REGION
+      # copy the contents of /build to S3
+      # - aws s3 cp --recursive ./dist s3://$S3_BUCKET/
+      # - aws s3 sync ./dist s3://$S3_BUCKET/ --delete --cache-control max-age=604800
+      - aws s3 cp --recursive ./dist s3://$S3_BUCKET/
+      
+      # set the cache-control headers for service-worker.js to prevent
+      # browser caching
+      # - >
+      #  aws s3 cp  
+      #  --cache-control="max-age=0, no-cache, no-store, must-revalidate" 
+      #  ./build/service-worker.js s3://$S3_BUCKET/
+      # set the cache-control headers for index.html to prevent
+      # browser caching
+      # - >
+      #   aws s3 cp  
+      #   --cache-control="max-age=0, no-cache, no-store, must-revalidate"
+      #   ./dist/index.html s3://$S3_BUCKET/
+      - >
+        aws s3 cp
+        --cache-control="max-age=0, no-cache, no-store, must-revalidate"
+        ./dist/index.html s3://$S3_BUCKET/
+      
+      # invalidate the CloudFront cache for index.html and service-worker.js
+      # to force CloudFront to update its edge locations with the new versions
+      - ASSUME_ROLE_ARN=$CF_ROLE_ARN
+      - TEMP_ROLE=`aws sts assume-role --role-arn $ASSUME_ROLE_ARN --role-session-name themall-cloudfront-invalidation-role`
+      - export TEMP_ROLE
+      - echo $TEMP_ROLE
+      - export AWS_ACCESS_KEY_ID=$(echo "$TEMP_ROLE" | jq -r '.Credentials.AccessKeyId')
+      - export AWS_SECRET_ACCESS_KEY=$(echo "$TEMP_ROLE" | jq -r '.Credentials.SecretAccessKey')
+      - export AWS_SESSION_TOKEN=$(echo "$TEMP_ROLE" | jq -r '.Credentials.SessionToken')
+      - echo $AWS_ACCESS_KEY_ID
+      - echo $AWS_SECRET_ACCESS_KEY
+      - echo $AWS_SESSION_TOKEN
+      # - aws cloudfront create-invalidation --distribution-id=$CDN_DISTRIBUTION_ID --paths "/index.html" "/_nuxt/*" "/template/*"
+      - aws cloudfront create-invalidation --distribution-id=$CDN_DISTRIBUTION_ID --paths "/*"
+      
+cache:
+  paths:
+    - 'node_modules/**/*'
+
+artifacts:
+  files:
+    - '**/*'
+  base-directory: dist

@@ -1,0 +1,33 @@
+{
+  "name": "mauthen-web",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare",
+    "rsync": "rsync -avu --delete --exclude=.DS_Store --exclude=.git --exclude=.nuxt --exclude=node_modules /Users/peepitkm/themall-mauthen-web/ /Users/peepitkm/mauthen-web",
+    "rsync-mauthen-web": "rsync -avu --delete --exclude=.DS_Store --exclude=.git --exclude=.nuxt --exclude=node_modules /Users/peepitkm/mauthen-web/ /Users/peepitkm/themall-mauthen-web"
+  },
+  "dependencies": {
+    "@nuxt/fonts": "^0.10.2",
+    "@nuxt/image": "^1.8.1",
+    "@nuxt/kit": "^3.14.1592",
+    "@nuxt/ui": "^2.21.0",
+    "@nuxtjs/i18n": "^9.1.1",
+    "@pinia/nuxt": "^0.7.0",
+    "eslint": "^9.14.0",
+    "nuxt": "^3.14.1592",
+    "pinia": "^2.2.6",
+    "vue": "latest",
+    "vue-router": "latest",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@nuxt/eslint": "^0.6.1",
+    "typescript": "^5.6.3"
+  }
+}
