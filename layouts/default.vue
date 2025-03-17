@@ -87,13 +87,22 @@ onMounted(async () => {
             console.log('onSuccess => ', token);
         }
 
+        // Set isCaptchaOpen first so the modal opens and renders the container
+        isCaptchaOpen.value = true;
+
+        // Wait for next tick so the modal and container are in the DOM
         await nextTick();
+
+        // Wait another tick to ensure container is fully rendered
+        await nextTick(); 
+
         console.log('captchaContainer.value => ', captchaContainer.value);
 
         if (captchaContainer.value) {
-            isCaptchaOpen.value = true;
             showCaptcha(captchaContainer.value, onSuccess);
             console.log('isCaptchaOpen.value => ', isCaptchaOpen.value);
+        } else {
+            console.error('Captcha container not found in DOM after modal open');
         }
     }
 });
