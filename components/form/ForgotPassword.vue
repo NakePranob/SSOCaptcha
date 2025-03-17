@@ -38,12 +38,13 @@ const state = reactive({
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
     if (isPending.value) return;
-    isPending.value = true;
 
     try {
         // Call forgot password API
         const callApi = async (token: string) => {
+            isPending.value = true;
             isCaptchaOpen.value = false;
+
             const { data, error } = await useFetch<{
                 message: string;
                 session_id: string;
@@ -90,13 +91,8 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
         } catch (error) {
             console.error('Error getting WAF token:', error);
             if (!wafToken) {
-                // Set isCaptchaOpen first so the modal opens and renders the container
+                
                 isCaptchaOpen.value = true;
-                
-                // Wait for next tick so the modal and container are in the DOM
-                await nextTick();
-                
-                // Wait another tick to ensure container is fully rendered
                 await nextTick();
 
                 if (captchaContainer.value) {
