@@ -89,7 +89,8 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
             }
         } catch (error) {
             console.error('Error getting WAF token:', error);
-            if (!wafToken) {
+            if (wafToken === '') {
+                console.log('captchaContainer.value => ', captchaContainer.value);
                 if (captchaContainer.value) {
                     isCaptchaOpen.value = true;
                     showCaptcha(captchaContainer.value, callApi);
