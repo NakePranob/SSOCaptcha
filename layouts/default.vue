@@ -87,6 +87,8 @@ onMounted(async () => {
             console.log('onSuccess => ', token);
         }
 
+        await nextTick();
+
         if (captchaContainer.value) {
             isCaptchaOpen.value = true;
             showCaptcha(captchaContainer.value, onSuccess);
