@@ -81,8 +81,15 @@ onMounted(async () => {
         }
     } catch (error) {
         console.log('error => ', error);
+
+        const onSuccess = (token: string) => {
+            isCaptchaOpen.value = false;
+            console.log('onSuccess => ', token);
+        }
+
         if (captchaContainer.value) {
-            showCaptcha(captchaContainer.value, setIsCaptchaOpen);
+            isCaptchaOpen.value = true;
+            showCaptcha(captchaContainer.value, onSuccess);
             console.log('isCaptchaOpen.value => ', isCaptchaOpen.value);
         }
     }
