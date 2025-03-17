@@ -1,6 +1,6 @@
 <script setup lang="ts">
+import { showCaptcha } from '~/utils/captcha/show-captcha';
 import { useI18n } from 'vue-i18n'
-import Captcha, { showCaptcha } from '~/components/captcha/Captcha.vue';
 declare global {
     interface Window {
         AwsWafIntegration: {
@@ -59,9 +59,8 @@ onMounted(async () => {
 
     console.log('window => ', window);
 
-    try {        
-        throw new Error ('test')
-
+    try {      
+        throw new Error('tesrt')  
         const AwsWafIntegration = window.AwsWafIntegration;
         // Handle WAF integration
         if (!AwsWafIntegration) {
@@ -76,7 +75,9 @@ onMounted(async () => {
             await AwsWafIntegration.getToken();
         }
     } catch (error) {
-        showCaptcha();
+        if (captchaContainer.value) {
+            showCaptcha(captchaContainer.value);
+        }
         if (captchaPending.value === true) {
             challageError.value = true;
         }
@@ -213,7 +214,11 @@ const { pending, error } = useAsyncData("policy", async () => {
                 </template>
             </UNotifications>
         </div>
-        <Captcha/>
+        <UModal v-model="auth.captchaModalIsOpen" prevent-close>
+            <div class="px-4 py-8 bg-white rounded-lg">
+                <div ref="captchaContainer" class=""></div>
+            </div>
+        </UModal>
     </div>
 </template>
 

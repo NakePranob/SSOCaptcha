@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { showCaptcha } from '@/components/captcha/Captcha.vue'
 import { z } from 'zod'
 import type { FormSubmitEvent } from '#ui/types'
 import { useI18n } from 'vue-i18n'
@@ -40,20 +39,14 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     try {
         // Get WAF token
         let wafToken = '';
-        // if (AwsWafIntegration) {
-        //     const hasToken = await AwsWafIntegration.hasToken();
-        //     if (!hasToken) {
-        //         wafToken = await AwsWafIntegration.getToken();
-        //     } else {
-        //         wafToken = await AwsWafIntegration.getToken();
-        //     }
-        // }
-
-        const test = (token: string) => {
-            console.log('TOKEN =>', token)
+        if (AwsWafIntegration) {
+            const hasToken = await AwsWafIntegration.hasToken();
+            if (!hasToken) {
+                wafToken = await AwsWafIntegration.getToken();
+            } else {
+                wafToken = await AwsWafIntegration.getToken();
+            }
         }
-
-        showCaptcha(test)
 
         if (!wafToken) {
             toast.add({ title: t('noti-unknown-exception'), icon: "i-heroicons-x-circle" });
