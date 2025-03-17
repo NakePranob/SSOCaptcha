@@ -29,11 +29,15 @@ const route = useRoute()
 const currentPath = route.path
 
 // Ref variable
-const captchaPending = ref(false);
 const bodyHeight = ref();
 const lang = ref(locale.value as 'en' | 'th')
-const challageError = ref(false);
 const captchaContainer = ref<HTMLElement | null>(null);
+const isCaptchaOpen = ref<boolean>(false);
+
+const setIsCaptchaOpen = (value: boolean) => {
+    isCaptchaOpen.value = value;
+}
+
 watch(lang, (newlang, Oldlang) => {
     setLocale(newlang)
 })
@@ -59,8 +63,7 @@ onMounted(async () => {
 
     console.log('window => ', window);
 
-    try {      
-        throw new Error('tesrt')  
+    try {        
         const AwsWafIntegration = window.AwsWafIntegration;
         // Handle WAF integration
         if (!AwsWafIntegration) {
@@ -76,10 +79,7 @@ onMounted(async () => {
         }
     } catch (error) {
         if (captchaContainer.value) {
-            showCaptcha(captchaContainer.value);
-        }
-        if (captchaPending.value === true) {
-            challageError.value = true;
+            showCaptcha(captchaContainer.value, setIsCaptchaOpen);
         }
     }
 });

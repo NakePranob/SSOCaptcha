@@ -14,6 +14,11 @@ const toast = useToast();
 
 const formElement = ref<HTMLElement | null>(null);
 const captchaContainer = ref<HTMLElement | null>(null);
+const isCaptchaOpen = ref<boolean>(false);
+
+const setIsCaptchaOpen = (value: boolean) => {
+    isCaptchaOpen.value = value;
+}
 
 const isPending = ref<boolean>(false);
 
@@ -89,7 +94,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
             console.error('Error getting WAF token:', error);
             if (!wafToken) {
                 if (captchaContainer.value) {
-                    showCaptcha(captchaContainer.value, callApi);
+                    showCaptcha(captchaContainer.value, setIsCaptchaOpen, callApi);
                 }
                 return;
             }
