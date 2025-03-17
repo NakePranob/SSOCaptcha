@@ -168,7 +168,7 @@ const getElementHeight = () => {
                 <UIcon name="i-heroicons-arrow-left" class="w-5 h-5" /> {{ $t('back-to-sign-in') }}
             </NuxtLink>
         </div>
-        <UModal v-model="auth.captchaModalIsOpen" prevent-close>
+        <UModal v-model="isCaptchaOpen" prevent-close>
             <div class="px-4 py-8 bg-white rounded-lg">
                 <div ref="captchaContainer" class=""></div>
             </div>

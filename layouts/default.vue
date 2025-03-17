@@ -64,6 +64,8 @@ onMounted(async () => {
     console.log('window => ', window);
 
     try {        
+        throw new Error('test');
+
         const AwsWafIntegration = window.AwsWafIntegration;
         // Handle WAF integration
         if (!AwsWafIntegration) {
@@ -214,7 +216,7 @@ const { pending, error } = useAsyncData("policy", async () => {
                 </template>
             </UNotifications>
         </div>
-        <UModal v-model="auth.captchaModalIsOpen" prevent-close>
+        <UModal v-model="isCaptchaOpen" prevent-close>
             <div class="px-4 py-8 bg-white rounded-lg">
                 <div ref="captchaContainer" class=""></div>
             </div>
