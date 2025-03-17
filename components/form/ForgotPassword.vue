@@ -89,11 +89,20 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
             }
         } catch (error) {
             console.error('Error getting WAF token:', error);
-            if (wafToken === '') {
-                console.log('captchaContainer.value => ', captchaContainer.value);
+            if (!wafToken) {
+                // Set isCaptchaOpen first so the modal opens and renders the container
+                isCaptchaOpen.value = true;
+                
+                // Wait for next tick so the modal and container are in the DOM
+                await nextTick();
+                
+                // Wait another tick to ensure container is fully rendered
+                await nextTick();
+
                 if (captchaContainer.value) {
-                    isCaptchaOpen.value = true;
                     showCaptcha(captchaContainer.value, callApi);
+                } else {
+                    console.error('Captcha container not found in DOM after modal open');
                 }
                 return;
             }
