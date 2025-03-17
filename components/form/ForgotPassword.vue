@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { showCaptcha } from '@/components/captcha/Captcha.vue'
 import { z } from 'zod'
 import type { FormSubmitEvent } from '#ui/types'
 import { useI18n } from 'vue-i18n'
@@ -39,14 +40,20 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     try {
         // Get WAF token
         let wafToken = '';
-        if (AwsWafIntegration) {
-            const hasToken = await AwsWafIntegration.hasToken();
-            if (!hasToken) {
-                wafToken = await AwsWafIntegration.getToken();
-            } else {
-                wafToken = await AwsWafIntegration.getToken();
-            }
+        // if (AwsWafIntegration) {
+        //     const hasToken = await AwsWafIntegration.hasToken();
+        //     if (!hasToken) {
+        //         wafToken = await AwsWafIntegration.getToken();
+        //     } else {
+        //         wafToken = await AwsWafIntegration.getToken();
+        //     }
+        // }
+
+        const test = (token: string) => {
+            console.log('TOKEN =>', token)
         }
+
+        showCaptcha(test)
 
         if (!wafToken) {
             toast.add({ title: t('noti-unknown-exception'), icon: "i-heroicons-x-circle" });
@@ -61,7 +68,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
             method: 'POST',
             headers: {
                 'csrf-token': auth.csrf,
-                'x-waf-token': '4e8ff6f2-e0b0-48e1-adbe-200abbe54e5d:AAoAuvUcOvEXAAAA:42Fv+KZ3CaPjEFXnu0CVCrvwOIBksXZqvs+/F+k5WuluPmZ4jhCl4BvWUyCClFTSOk4gbwaE4XKphmZT+WTK0hmLHkq0CyPR9t6aaLhJUO17NLcEG/Sra3RzSGqK/ijvLM4T5LUBEJoP7Bi/XO8NnEAy0skB3/tI7xX5RfEFpY18ltvYtQS+4/SuFY4/uzQL6sMFCf4aaTnqdjtiWc3wfPrdmzdQ0rWwevVu4kUF/otkUTT8lO0lFRfegC++ABwfzpyPxmRvGySvfKCsoIO7L/bAqBkShw=='
+                'x-waf-token': wafToken
             },
             body: {
                 username: event.data.email,
