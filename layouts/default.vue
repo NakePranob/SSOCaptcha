@@ -80,8 +80,10 @@ onMounted(async () => {
             await AwsWafIntegration.getToken();
         }
     } catch (error) {
+        console.log('error => ', error);
         if (captchaContainer.value) {
             showCaptcha(captchaContainer.value, setIsCaptchaOpen);
+            console.log('isCaptchaOpen.value => ', isCaptchaOpen.value);
         }
     }
 });
