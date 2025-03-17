@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { showCaptcha } from '~/utils/captcha/show-captcha';
 import { z } from 'zod'
 import type { FormSubmitEvent } from '#ui/types'
 import { useI18n } from 'vue-i18n'
@@ -12,6 +13,8 @@ const pageView = usePageViewStore();
 const toast = useToast();
 
 const formElement = ref<HTMLElement | null>(null);
+const captchaContainer = ref<HTMLElement | null>(null);
+
 const isPending = ref<boolean>(false);
 
 const schema = z.object({
@@ -37,53 +40,64 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     isPending.value = true;
 
     try {
+        // Call forgot password API
+        const callApi = async (token: string) => {
+            const { data, error } = await useFetch<{
+                message: string;
+                session_id: string;
+            }>(`${runtimeConfig.public.apiBase}/api/v1/auth/forgot-password${auth.getParams}`, {
+                method: 'POST',
+                headers: {
+                    'csrf-token': auth.csrf,
+                    'x-waf-token': wafToken
+                },
+                body: {
+                    username: event.data.email,
+                },
+                credentials: 'include',
+            });
+
+            if (error.value) {
+                console.error("Error message from server:", error || "Unknown error occurred");
+                toast.add({ title: t('noti-unknown-exception'), icon: "i-heroicons-x-circle" });
+                return;
+            }
+
+            if (data.value) {
+                auth.setForgotPassword({
+                    email: event.data.email,
+                    sessionId: data.value.session_id,
+                    reference: data.value.session_id.slice(-6).replace("_","M").replace("-","M").toUpperCase()
+                });
+                pageView.setNextPage('resetPassword')
+            }
+        };
+
         // Get WAF token
         let wafToken = '';
-        if (AwsWafIntegration) {
-            const hasToken = await AwsWafIntegration.hasToken();
-            if (!hasToken) {
-                wafToken = await AwsWafIntegration.getToken();
-            } else {
-                wafToken = await AwsWafIntegration.getToken();
+        try {
+            if (AwsWafIntegration) {
+                throw new Error('test');
+                const hasToken = await AwsWafIntegration.hasToken();
+                if (!hasToken) {
+                    wafToken = await AwsWafIntegration.getToken();
+                } else {
+                    wafToken = await AwsWafIntegration.getToken();
+                }
+            }
+        } catch (error) {
+            console.error('Error getting WAF token:', error);
+            if (!wafToken) {
+                if (captchaContainer.value) {
+                    showCaptcha(captchaContainer.value, callApi);
+                }
+                return;
             }
         }
 
-        if (!wafToken) {
-            toast.add({ title: t('noti-unknown-exception'), icon: "i-heroicons-x-circle" });
-            return;
+        if (wafToken) {
+            await callApi(wafToken);
         }
-
-        // Call forgot password API
-        const { data, error } = await useFetch<{
-            message: string;
-            session_id: string;
-        }>(`${runtimeConfig.public.apiBase}/api/v1/auth/forgot-password${auth.getParams}`, {
-            method: 'POST',
-            headers: {
-                'csrf-token': auth.csrf,
-                'x-waf-token': wafToken
-            },
-            body: {
-                username: event.data.email,
-            },
-            credentials: 'include',
-        });
-
-        if (error.value) {
-            console.error("Error message from server:", error || "Unknown error occurred");
-            toast.add({ title: t('noti-unknown-exception'), icon: "i-heroicons-x-circle" });
-            return;
-        }
-
-        if (data.value) {
-            auth.setForgotPassword({
-                email: event.data.email,
-                sessionId: data.value.session_id,
-                reference: data.value.session_id.slice(-6).replace("_","M").replace("-","M").toUpperCase()
-            });
-            pageView.setNextPage('resetPassword')
-        }
-
     } catch (error) {
         console.error('Unexpected error:', error);
         toast.add({ title: t('noti-not-connect-api'), icon: "i-heroicons-x-circle" });
@@ -149,5 +163,10 @@ const getElementHeight = () => {
                 <UIcon name="i-heroicons-arrow-left" class="w-5 h-5" /> {{ $t('back-to-sign-in') }}
             </NuxtLink>
         </div>
+        <UModal v-model="auth.captchaModalIsOpen" prevent-close>
+            <div class="px-4 py-8 bg-white rounded-lg">
+                <div ref="captchaContainer" class=""></div>
+            </div>
+        </UModal>
     </div>
 </template>
