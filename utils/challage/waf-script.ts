@@ -64,7 +64,9 @@ export async function reCheckWAFToken() {
             throw new Error('test');
             await setWAFToken();
         }
+        return true;
     } catch (error) {
+
         auth.setCaptchaIsShow(true);
         await nextTick();
         try {
@@ -75,6 +77,7 @@ export async function reCheckWAFToken() {
         } catch (error) {
             console.error('Error showing captcha:', error);
         }
+        return false;
     }
 }
 

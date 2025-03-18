@@ -3,7 +3,6 @@ import { z } from 'zod'
 import type { FormSubmitEvent } from '#ui/types'
 import { reCheckWAFToken } from '~/utils/challage/waf-script';
 const { t } = useI18n();
-const runtimeConfig = useRuntimeConfig();
 
 const INTERNAL_DOMAIN_LIST = useGlobalStore().config?.INTERNAL_DOMAIN_LIST ?? [];
 const auth = useAuthStore();
@@ -37,7 +36,10 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     isPending.value = true;
     
     try {
-        await reCheckWAFToken();
+        const isWAFTokenValid = await reCheckWAFToken();
+        if (!isWAFTokenValid) {
+            return;
+        }
         const { data, error } = await useFetch<{
             message: string;
             session_id: string;
