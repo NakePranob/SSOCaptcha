@@ -5,6 +5,12 @@
 </template>
 
 <script lang="ts" setup>
+import { 
+    showCaptcha, 
+    loadAwsWafCaptchaScript, 
+    loadAwsWafIntegrationScript, 
+    setWAFToken 
+} from '@/utils/challage/aws-waf-script';
 const runtimeConfig = useRuntimeConfig();
 const auth = useAuthStore();
 
