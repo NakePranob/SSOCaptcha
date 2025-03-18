@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { z } from 'zod'
 import type { FormSubmitEvent } from '#ui/types'
-import { reCheckWAFToken } from '~/utils/challage/waf-script';
+import { isValidWAFToken } from '~/utils/challage/aws-waf-script';
 const { t } = useI18n();
 const runtimeConfig = useRuntimeConfig();
 
@@ -37,12 +37,14 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     isPending.value = true;
     
     try {
-        const isWAFTokenValid = await reCheckWAFToken();
+        // Check WAF Token
+        const isWAFTokenValid = await isValidWAFToken();
         if (!isWAFTokenValid) {
             toast.add({ title: t('noti-unknown-exception'), icon: "i-heroicons-x-circle" });
             return;
         }
         
+        // Send request to server
         const { data, error } = await useFetch<{
             message: string;
             session_id: string;

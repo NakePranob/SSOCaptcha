@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import sleep from '~/utils/sleep';
+
 const pageView = usePageViewStore();
 const element = useElementStore();
 const bodyHeight = ref();
@@ -27,7 +29,7 @@ const scrollTo = async (page: string) => {
             page1.value?.scrollIntoView({ behavior: 'smooth', inline: 'start' });
             break;
     }
-    await delay(500);
+    await sleep(500);
     pageView.setNowPage(page);
 };
 

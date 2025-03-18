@@ -1,9 +1,10 @@
+import sleep from '../sleep';
+
 declare global {
     interface Window {
         AwsWafIntegration: {
             getToken(): Promise<string>;
             hasToken(): boolean;
-            fetch(url: string, options?: RequestInit): Promise<Response>;
         },
         AwsWafCaptcha: {
             renderCaptcha(container: HTMLElement, options: any): void;
@@ -57,11 +58,10 @@ export async function hasWAFToken(): Promise<boolean> {
     throw new Error('AWS WAF Integration failed to load');
 }
 
-export async function reCheckWAFToken() {
+export async function isValidWAFToken() {
     const auth = useAuthStore();
     try {
-        throw new Error('no waf token')
-
+        throw new Error('test');
         if (!(await hasWAFToken())) {
             await setWAFToken();
         }
@@ -73,7 +73,8 @@ export async function reCheckWAFToken() {
         try {
             await new Promise<void>((resolve, reject) => {
                 showCaptcha(
-                    (token: string) => {
+                    async (token: string) => {
+                        await sleep(3000);
                         auth.setCaptchaIsShow(false);
                         auth.setWAFToken(token);
                         resolve();

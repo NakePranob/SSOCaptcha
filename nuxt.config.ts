@@ -50,7 +50,7 @@ export default defineNuxtConfig({
     public: {
       clientVersion: pkg.version,
       stage: process.env.STAGE,
-      apiBase: process.env.NUXT_PUBLIC_API_BASE,
+      apiBaseUrl: `${process.env.NUXT_PUBLIC_API_BASE}/api/v1`,
       COGNITO_OAUTH2_ENDPOINT: process.env.COGNITO_OAUTH2_ENDPOINT,
       AWS_WAF_INTEGRATION_ENDPOINT: process.env.AWS_WAF_INTEGRATION_ENDPOINT,
       AWS_WAF_CAPTCHA_ENDPOINT: process.env.AWS_WAF_CAPTCHA_ENDPOINT,

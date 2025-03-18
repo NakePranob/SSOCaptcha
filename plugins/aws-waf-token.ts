@@ -1,9 +1,9 @@
 export default defineNuxtPlugin((nuxtApp) => {
     nuxtApp.hook("app:created", () => {
         const auth = useAuthStore();
-        const { public: { apiBase } } = useRuntimeConfig();
+        const { public: { apiBaseUrl } } = useRuntimeConfig();
         globalThis.$fetch = $fetch.create({
-            baseURL: `${apiBase}/api/v1`,
+            baseURL: apiBaseUrl,
             onRequest({ options }) {
                 const headers = new Headers(options.headers as HeadersInit);
                 if (auth.csrf) {
