@@ -30,26 +30,28 @@ watch(lang, (newLang) => {
 });
 
 onMounted(async () => {
-    try {
-        await Promise.all([loadAwsWafIntegrationScript(), loadAwsWafCaptchaScript()]);
+    if (!currentPath.includes('logout')) {
         try {
-            await setWAFToken();
-        } catch (error) {
-            console.error('Error getting WAF Token:', error);
-            auth.setCaptchaIsShow(true);
-            await nextTick();
+            await Promise.all([loadAwsWafIntegrationScript(), loadAwsWafCaptchaScript()]);
             try {
-                showCaptcha(async (token: string) => {
-                    await sleep(3000);
-                    auth.setCaptchaIsShow(false);
-                    auth.setWAFToken(token);
-                });
+                await setWAFToken();
             } catch (error) {
-                console.error('Error showing captcha:', error);
+                console.error('Error getting WAF Token:', error);
+                auth.setCaptchaIsShow(true);
+                await nextTick();
+                try {
+                    showCaptcha(async (token: string) => {
+                        await sleep(3000);
+                        auth.setCaptchaIsShow(false);
+                        auth.setWAFToken(token);
+                    });
+                } catch (error) {
+                    console.error('Error showing captcha:', error);
+                }
             }
+        } catch (error) {
+            console.error('Error loading AWS WAF scripts:', error);
         }
-    } catch (error) {
-        console.error('Error loading AWS WAF scripts:', error);
     }
 });
 
