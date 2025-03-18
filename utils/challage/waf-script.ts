@@ -60,12 +60,13 @@ export async function hasWAFToken(): Promise<boolean> {
 export async function reCheckWAFToken() {
     const auth = useAuthStore();
     try {
-        throw new Error('test');
+        throw new Error('s');
         if (!(await hasWAFToken())) {
             await setWAFToken();
         }
         return true;
     } catch (error) {
+        console.error('Error checking WAF Token:', error);
         auth.setCaptchaIsShow(true);
         await nextTick();
         try {
@@ -102,16 +103,12 @@ export function showCaptcha(
     if (container) {
         AwsWafCaptcha.renderCaptcha(container, {
             apiKey: runtimeConfig.public.AWS_WAF_CAPTCHA_API_KEY as string,
-            onSuccess: (token:string) => {
-                if (onSuccess) {
-                    onSuccess(token);
-                }
+            onSuccess: (token: string) => {
+                onSuccess?.(token);
             },
             onError: () => {
                 console.log('onError');
-                if (onError) {
-                    onError();
-                }
+                onError?.();
             },
         });
     }
