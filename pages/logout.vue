@@ -13,7 +13,10 @@ onMounted(async () => {
             description: 'noti-success-logout-description'
         })
     } else {
-        navigateTo(`${runtimeConfig.public.apiBaseUrl}/auth/logout?client_id=${auth.getClientId}&logout_uri=${auth.getLogoutUri}`, { external: true});
+        await nextTick();
+        if (auth.wafToken) {
+            navigateTo(`${runtimeConfig.public.apiBaseUrl}/auth/logout?client_id=${auth.getClientId}&logout_uri=${auth.getLogoutUri}`, { external: true});
+        }
     }
 })
 </script>
@@ -26,6 +29,9 @@ onMounted(async () => {
             class="min-w-full h-screen flex justify-center items-center snap-center snap-always px-4"
         >
             <FormAlertPage/>
+        </div>
+        <div v-else class="h-screen w-full flex justify-center items-center">
+            <UCircular size='40' color='#E91C21' />
         </div>
     </div>
 </template>

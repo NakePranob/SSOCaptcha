@@ -118,7 +118,7 @@ const onSubmit = async (event: FormSubmitEvent<{
         if (error.value) {
             console.error('Error message from server:', error || 'Unknown error occurred');
             if (error.value.data.ChallengeName === 'NEW_PASSWORD_REQUIRED') {
-                toast.add({ title: t('noti-new-password-required-exception'), icon: "i-heroicons-x-circle" });
+                toast.add({ title: t('noti-new-password-required-exception'), color: "blue", icon: "i-heroicons-key" });
                 auth.setChangPassword({
                     session: error.value.data.Session,
                     email: error.value.data.ChallengeParameters.userAttributes.email,

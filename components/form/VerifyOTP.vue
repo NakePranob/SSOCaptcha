@@ -67,7 +67,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 
         if (error.value) {
             if (error.value.data.ChallengeName === 'NEW_PASSWORD_REQUIRED') {
-                toast.add({ title: t('noti-new-password-required-exception'), icon: "i-heroicons-x-circle" });
+                toast.add({ title: t('noti-new-password-required-exception'), color: "blue", icon: "i-heroicons-key" });
                 auth.setChangPassword({
                     session: error.value.data.Session,
                     email: error.value.data.ChallengeParameters.userAttributes.email,

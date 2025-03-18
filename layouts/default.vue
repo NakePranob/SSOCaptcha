@@ -29,20 +29,35 @@ watch(lang, (newLang) => {
     setLocale(newLang);
 });
 
-onMounted(async () => {
+onMounted(() => {
+    bodyHeight.value = document.body.clientHeight
+});
+
+const { pending, error } = useAsyncData("policy", async () => {
     try {
         await Promise.all([loadAwsWafIntegrationScript(), loadAwsWafCaptchaScript()]);
         try {
+            throw new Error("test");
+            
             await setWAFToken();
         } catch (error) {
             console.error('Error getting WAF Token:', error);
             auth.setCaptchaIsShow(true);
             await nextTick();
             try {
-                showCaptcha(async (token: string) => {
-                    await sleep(3000);
-                    auth.setCaptchaIsShow(false);
-                    auth.setWAFToken(token);
+                await new Promise<void>((resolve, reject) => {
+                    showCaptcha(
+                        async (token: string) => {
+                            await sleep(3000);
+                            auth.setCaptchaIsShow(false);
+                            auth.setWAFToken(token);
+                            resolve();
+                        },
+                        () => {
+                            console.error('Error showing captcha');
+                            reject(new Error('Captcha failed'));
+                        }
+                    );
                 });
             } catch (error) {
                 console.error('Error showing captcha:', error);
@@ -51,13 +66,7 @@ onMounted(async () => {
     } catch (error) {
         console.error('Error loading AWS WAF scripts:', error);
     }
-});
 
-onMounted(() => {
-    bodyHeight.value = document.body.clientHeight
-});
-
-const { pending, error } = useAsyncData("policy", async () => {
     if (!currentPath.includes('logout')) {
         const token = await getCSRF()
         if (token) {
@@ -87,8 +96,6 @@ const { pending, error } = useAsyncData("policy", async () => {
         }
 
         return true;
-    } else {
-        return true
     }
 });
 
