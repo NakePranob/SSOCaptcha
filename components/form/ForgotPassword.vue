@@ -3,6 +3,7 @@ import { z } from 'zod'
 import type { FormSubmitEvent } from '#ui/types'
 import { reCheckWAFToken } from '~/utils/challage/waf-script';
 const { t } = useI18n();
+const runtimeConfig = useRuntimeConfig();
 
 const INTERNAL_DOMAIN_LIST = useGlobalStore().config?.INTERNAL_DOMAIN_LIST ?? [];
 const auth = useAuthStore();
@@ -37,6 +38,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     
     try {
         const isWAFTokenValid = await reCheckWAFToken();
+        console.log("isWAFTokenValid", isWAFTokenValid)
         if (!isWAFTokenValid) {
             return;
         }

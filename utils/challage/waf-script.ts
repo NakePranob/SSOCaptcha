@@ -66,18 +66,27 @@ export async function reCheckWAFToken() {
         }
         return true;
     } catch (error) {
-
         auth.setCaptchaIsShow(true);
         await nextTick();
         try {
-            showCaptcha((token: string) => {
-                auth.setCaptchaIsShow(false);
-                auth.setWAFToken(token);
+            await new Promise<void>((resolve, reject) => {
+                showCaptcha(
+                    (token: string) => {
+                        auth.setCaptchaIsShow(false);
+                        auth.setWAFToken(token);
+                        resolve();
+                    },
+                    () => {
+                        console.error('Error showing captcha');
+                        reject(new Error('Captcha failed'));
+                    }
+                );
             });
         } catch (error) {
             console.error('Error showing captcha:', error);
+            return false;
         }
-        return false;
+        return true;
     }
 }
 
