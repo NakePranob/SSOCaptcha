@@ -1,11 +1,10 @@
 <script setup lang="ts">
-import { showCaptcha } from '~/utils/captcha/show-captcha';
 import { z } from 'zod'
 import type { FormSubmitEvent } from '#ui/types'
-import { useI18n } from 'vue-i18n'
+import { reCheckWAFToken } from '~/utils/challage/waf-script';
 const { t } = useI18n();
 const runtimeConfig = useRuntimeConfig();
-const AwsWafIntegration = window.AwsWafIntegration;
+
 const INTERNAL_DOMAIN_LIST = useGlobalStore().config?.INTERNAL_DOMAIN_LIST ?? [];
 const auth = useAuthStore();
 const element = useElementStore();
@@ -13,9 +12,6 @@ const pageView = usePageViewStore();
 const toast = useToast();
 
 const formElement = ref<HTMLElement | null>(null);
-const captchaContainer = ref<HTMLElement | null>(null);
-const isCaptchaOpen = ref<boolean>(false);
-
 const isPending = ref<boolean>(false);
 
 const schema = z.object({
@@ -38,74 +34,33 @@ const state = reactive({
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
     if (isPending.value) return;
-
+    isPending.value = true;
+    
     try {
-        // Call forgot password API
-        const callApi = async (token: string) => {
-            isPending.value = true;
-            isCaptchaOpen.value = false;
+        await reCheckWAFToken();
+        const { data, error } = await useFetch<{
+            message: string;
+            session_id: string;
+        }>(`/auth/forgot-password${auth.getParams}`, {
+            method: 'POST',
+            body: {
+                username: event.data.email,
+            },
+        });
 
-            const { data, error } = await useFetch<{
-                message: string;
-                session_id: string;
-            }>(`${runtimeConfig.public.apiBase}/api/v1/auth/forgot-password${auth.getParams}`, {
-                method: 'POST',
-                headers: {
-                    'csrf-token': auth.csrf,
-                    'x-waf-token': wafToken
-                },
-                body: {
-                    username: event.data.email,
-                },
-                credentials: 'include',
-            });
-
-            if (error.value) {
-                console.error("Error message from server:", error || "Unknown error occurred");
-                toast.add({ title: t('noti-unknown-exception'), icon: "i-heroicons-x-circle" });
-                return;
-            }
-
-            if (data.value) {
-                auth.setForgotPassword({
-                    email: event.data.email,
-                    sessionId: data.value.session_id,
-                    reference: data.value.session_id.slice(-6).replace("_","M").replace("-","M").toUpperCase()
-                });
-                pageView.setNextPage('resetPassword')
-            }
-        };
-
-        // Get WAF token
-        let wafToken = '';
-        try {
-            if (AwsWafIntegration) {
-                throw new Error('test');
-                const hasToken = await AwsWafIntegration.hasToken();
-                if (!hasToken) {
-                    wafToken = await AwsWafIntegration.getToken();
-                } else {
-                    wafToken = await AwsWafIntegration.getToken();
-                }
-            }
-        } catch (error) {
-            console.error('Error getting WAF token:', error);
-            if (!wafToken) {
-                
-                isCaptchaOpen.value = true;
-                await nextTick();
-
-                if (captchaContainer.value) {
-                    showCaptcha(captchaContainer.value, callApi);
-                } else {
-                    console.error('Captcha container not found in DOM after modal open');
-                }
-                return;
-            }
+        if (error.value) {
+            console.error("Error message from server:", error || "Unknown error occurred");
+            toast.add({ title: t('noti-unknown-exception'), icon: "i-heroicons-x-circle" });
+            return;
         }
 
-        if (wafToken) {
-            await callApi(wafToken);
+        if (data.value) {
+            auth.setForgotPassword({
+                email: event.data.email,
+                sessionId: data.value.session_id,
+                reference: data.value.session_id.slice(-6).replace("_","M").replace("-","M").toUpperCase()
+            });
+            pageView.setNextPage('resetPassword')
         }
     } catch (error) {
         console.error('Unexpected error:', error);
@@ -172,10 +127,5 @@ const getElementHeight = () => {
                 <UIcon name="i-heroicons-arrow-left" class="w-5 h-5" /> {{ $t('back-to-sign-in') }}
             </NuxtLink>
         </div>
-        <UModal v-model="isCaptchaOpen" prevent-close>
-            <div class="px-4 py-8 bg-white rounded-lg">
-                <div ref="captchaContainer" class=""></div>
-            </div>
-        </UModal>
     </div>
 </template>

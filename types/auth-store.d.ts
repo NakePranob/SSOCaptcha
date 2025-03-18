@@ -34,7 +34,8 @@ declare global {
   // auth Stores State Type
   interface AuthState {
     csrf: string;
-    captchaModalIsOpen: boolean;
+    captchaIsShow: boolean;
+    wafToken: string;
     otp: OTPType;
     codeVerification: CodeVerificationType;
     forgotPassword: ForgotPasswordType;

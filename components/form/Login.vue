@@ -1,10 +1,9 @@
 <script setup lang="ts">
 // import
 import { validatePasswordPolicy } from '@/utils/validate/password-policy'
-import { validateEmail } from '@/utils/validate/email'
-import { useI18n } from 'vue-i18n'
+import { validateEmail, isValidInternalEmail } from '@/utils/validate/email'
 import type { FormError, FormSubmitEvent } from '#ui/types'
-const AwsWafIntegration = window.AwsWafIntegration;
+
 const runtimeConfig = useRuntimeConfig();
 const router = useRouter();
 const toast = useToast();
@@ -93,22 +92,6 @@ const onSubmit = async (event: FormSubmitEvent<{
     }
 
     try {
-        // Get WAF token
-        let wafToken = '';
-        if (AwsWafIntegration) {
-            const hasToken = await AwsWafIntegration.hasToken();
-            if (!hasToken) {
-                wafToken = await AwsWafIntegration.getToken();
-            } else {
-                wafToken = await AwsWafIntegration.getToken();
-            }
-        }
-
-        if (!wafToken) {
-            toast.add({ title: t('noti-unknown-exception'), icon: "i-heroicons-x-circle" });
-            return;
-        }
-
         const { data, error } = await useFetch<{ 
             session?: string, challengeName?: string 
         } | {
@@ -117,8 +100,7 @@ const onSubmit = async (event: FormSubmitEvent<{
         }>(`${runtimeConfig.public.apiBase}/api/v1/auth/login${auth.getParams}`, {
             method: 'POST',
             headers: {
-                'csrf-token': auth.csrf,
-                'x-waf-token': wafToken,
+                'csrf-token': auth.csrf
             },
             credentials: 'include',
             body: {

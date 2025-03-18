@@ -2,9 +2,6 @@
 import { z } from 'zod'
 import type { FormSubmitEvent, FormError } from '#ui/types'
 import { validatePasswordPolicy } from '@/utils/validate/password-policy'
-import { useI18n } from 'vue-i18n'
-
-const AwsWafIntegration = window.AwsWafIntegration;
 const { t } = useI18n();
 const runtimeConfig = useRuntimeConfig();
 
@@ -62,29 +59,12 @@ async function onSubmit(event: FormSubmitEvent<any>) {
     isPending.value = true;
 
     try {
-        // Get WAF token
-        let wafToken = '';
-        if (AwsWafIntegration) {
-            const hasToken = await AwsWafIntegration.hasToken();
-            if (!hasToken) {
-                wafToken = await AwsWafIntegration.getToken();
-            } else {
-                wafToken = await AwsWafIntegration.getToken();
-            }
-        }
-
-        if (!wafToken) {
-            toast.add({ title: t('noti-unknown-exception'), icon: "i-heroicons-x-circle" });
-            return;
-        }
-
         const { data, error } = await useFetch<{
             redirectUrl: string;
         }>(`${runtimeConfig.public.apiBase}/api/v1/auth/forgot-password${auth.getParams}`, {
             method: 'POST',
             headers: {
-                'csrf-token': auth.csrf,
-                'x-waf-token': wafToken,
+                'csrf-token': auth.csrf
             },
             body: {
                 username: auth.forgotPassword.email,
@@ -132,30 +112,13 @@ async function resendCode() {
     isPending.value = true;
     
     try {
-        // Get WAF token
-        let wafToken = '';
-        if (AwsWafIntegration) {
-            const hasToken = await AwsWafIntegration.hasToken();
-            if (!hasToken) {
-                wafToken = await AwsWafIntegration.getToken();
-            } else {
-                wafToken = await AwsWafIntegration.getToken();
-            }
-        }
-
-        if (!wafToken) {
-            toast.add({ title: t('noti-unknown-exception'), icon: "i-heroicons-x-circle" });
-            return;
-        }
-
         const { data, error } = await useFetch<{
             message: string;
             session_id: string;
         }>(`${runtimeConfig.public.apiBase}/api/v1/auth/forgot-password${auth.getParams}`, {
             method: 'POST',
             headers: {
-                'csrf-token': auth.csrf,
-                'x-waf-token': wafToken,
+                'csrf-token': auth.csrf
             },
             body: {
                 username: auth.forgotPassword.email,

@@ -1,21 +1,8 @@
 <script setup lang="ts">
-import { showCaptcha } from '~/utils/captcha/show-captcha';
-import { useI18n } from 'vue-i18n'
-declare global {
-    interface Window {
-        AwsWafIntegration: {
-            getToken(): Promise<string>;
-            hasToken(): boolean;
-            fetch(url: string, options?: RequestInit): Promise<Response>;
-        },
-        AwsWafCaptcha: {
-            renderCaptcha(container: HTMLElement, options: any): void;
-        }
-    }
-}
-
-// runtime config
-const runtimeConfig = useRuntimeConfig();
+import { useI18n } from 'vue-i18n';
+import { getCSRF } from '~/utils/csrf/get-token';
+import { getPolicy } from '~/utils/policy/getPolicy';
+import { showCaptcha, loadAwsWafCaptchaScript, loadAwsWafIntegrationScript, setWAFToken } from '~/utils/challage/waf-script';
 
 // i18n
 const { locale, setLocale, getLocaleCookie } = useI18n();
@@ -31,69 +18,31 @@ const currentPath = route.path
 // Ref variable
 const bodyHeight = ref();
 const lang = ref(locale.value as 'en' | 'th')
-const captchaContainer = ref<HTMLElement | null>(null);
-const isCaptchaOpen = ref<boolean>(false);
 
-const setIsCaptchaOpen = (value: boolean) => {
-    isCaptchaOpen.value = value;
-}
-
-watch(lang, (newlang, Oldlang) => {
-    setLocale(newlang)
-})
+watch(lang, (newLang) => {
+    setLocale(newLang);
+});
 
 onMounted(async () => {
-    const loadScript = (src: string): Promise<void> => {
-        return new Promise((resolve) => {
-            if (document.querySelector(`script[src="${src}"]`)) {
-                resolve();
-                return;
+    try {
+        await Promise.all([loadAwsWafIntegrationScript(), loadAwsWafCaptchaScript()]);
+        try {
+            await setWAFToken();
+        } catch (error) {
+            console.error('Error getting WAF Token:', error);
+            auth.setCaptchaIsShow(true);
+            await nextTick();
+            try {
+                showCaptcha((token: string) => {
+                    auth.setCaptchaIsShow(false);
+                    auth.setWAFToken(token);
+                });
+            } catch (error) {
+                console.error('Error showing captcha:', error);
             }
-            const script = document.createElement('script');
-            script.src = src;
-            script.defer = true;
-            script.onload = () => resolve();
-            document.head.appendChild(script);
-        });
-    };
-
-    // Load AWS WAF scripts
-    await loadScript('https://a2e68e46b9da.edge.captcha-sdk.awswaf.com/a2e68e46b9da/jsapi.js');
-    await loadScript(runtimeConfig.public.AWS_WAF_INTEGRATION_ENDPOINT);
-
-    console.log('window => ', window);
-
-    try {        
-        throw new Error('test');
-
-        const AwsWafIntegration = window.AwsWafIntegration;
-        // Handle WAF integration
-        if (!AwsWafIntegration) {
-            throw new Error('AWS WAF Integration failed to load');
-        }
-
-        console.log('AwsWafIntegration => ', AwsWafIntegration);
-
-        const hasToken = await AwsWafIntegration.hasToken();
-        console.log('hasToken => ', hasToken);
-        if (!hasToken) {
-            await AwsWafIntegration.getToken();
         }
     } catch (error) {
-        console.log('error => ', error);
-
-        const onSuccess = (token: string) => {
-            isCaptchaOpen.value = false;
-            console.log('onSuccess => ', token);
-        }
-
-        isCaptchaOpen.value = true;
-        await nextTick();
-
-        if (captchaContainer.value) {
-            showCaptcha(captchaContainer.value, onSuccess);
-            console.log('isCaptchaOpen.value => ', isCaptchaOpen.value);
-        }
+        console.error('Error loading AWS WAF scripts:', error);
     }
 });
 
@@ -103,46 +52,34 @@ onMounted(() => {
 
 const { pending, error } = useAsyncData("policy", async () => {
     if (!currentPath.includes('logout')) {
-        const csrf = await $fetch<{ token: string }>(`${runtimeConfig.public.apiBase}/api/v1/auth/csrf-token`, {
-            credentials: 'include',
-        });
-        if (csrf) {
-            auth.setCSRF(csrf?.token)
+        const token = await getCSRF()
+        if (token) {
+            auth.setCSRF(token)
         }
-
-        const res = await $fetch<{
-            password: {
-                MinimumLength: number;
-                RequireUppercase: boolean;
-                RequireLowercase: boolean;
-                RequireSymbols: boolean;
-                RequireNumbers: boolean;
-                TemporaryPasswordValidityDays: number;
-            },
-            global: MAuthenConfiguration;
-        }>(`${runtimeConfig.public.apiBase}/api/v1/auth/policy`);
-
-        if (res.password) {
+    
+        const { passwordPolicy, globalConfig } = await getPolicy();
+        
+        if (passwordPolicy) {
             form.setPasswordPolicy({
-                MinimumLength: res.password.MinimumLength,
-                RequireUppercase: res.password.RequireUppercase,
-                RequireLowercase: res.password.RequireLowercase,
-                RequireSymbols: res.password.RequireSymbols,
-                RequireNumbers: res.password.RequireNumbers,
+                MinimumLength: passwordPolicy.MinimumLength,
+                RequireUppercase: passwordPolicy.RequireUppercase,
+                RequireLowercase: passwordPolicy.RequireLowercase,
+                RequireSymbols: passwordPolicy.RequireSymbols,
+                RequireNumbers: passwordPolicy.RequireNumbers,
             });
 
-            global.setConfig(res.global);
+            global.setConfig(globalConfig);
 
-            let height = 18 * 2;
-            if (res.password.MinimumLength > 0) height += 18;
-            if (res.password.RequireUppercase) height += 18;
-            if (res.password.RequireLowercase) height += 18;
-            if (res.password.RequireSymbols) height += 18;
-            if (res.password.RequireNumbers) height += 18;
+            let height = 18*2;
+            if (passwordPolicy.MinimumLength > 0) height += 18;
+            if (passwordPolicy.RequireUppercase) height += 18;
+            if (passwordPolicy.RequireLowercase) height += 18;
+            if (passwordPolicy.RequireSymbols) height += 18;
+            if (passwordPolicy.RequireNumbers) height += 18;
             element.setPasswordPolicyHeight(height);
         }
 
-        return res;
+        return true;
     } else {
         return true
     }
@@ -206,9 +143,9 @@ const { pending, error } = useAsyncData("policy", async () => {
                         <UCircular size='40' color='#E91C21' />
                     </div>
                 </template>
-                <template v-else-if="!auth.getClientId && !route.path.includes('logout')">
+                <template v-else-if="!auth.getClientId && !route.path.includes('logout') || error">
                     <div class="h-screen w-full flex justify-center items-center">
-                        <ErrorPage title="oops" />
+                        <ErrorPage title="oops"/>
                     </div>
                 </template>
                 <template v-else>
@@ -227,11 +164,7 @@ const { pending, error } = useAsyncData("policy", async () => {
                 </template>
             </UNotifications>
         </div>
-        <UModal v-model="isCaptchaOpen" prevent-close>
-            <div class="px-4 py-8 bg-white rounded-lg">
-                <div ref="captchaContainer" class=""></div>
-            </div>
-        </UModal>
+        <Captcha />
     </div>
 </template>
 

@@ -53,6 +53,8 @@ export default defineNuxtConfig({
       apiBase: process.env.NUXT_PUBLIC_API_BASE,
       COGNITO_OAUTH2_ENDPOINT: process.env.COGNITO_OAUTH2_ENDPOINT,
       AWS_WAF_INTEGRATION_ENDPOINT: process.env.AWS_WAF_INTEGRATION_ENDPOINT,
+      AWS_WAF_CAPTCHA_ENDPOINT: process.env.AWS_WAF_CAPTCHA_ENDPOINT,
+      AWS_WAF_CAPTCHA_API_KEY: process.env.AWS_WAF_CAPTCHA_API_KEY,
     },
   },
   i18n: {

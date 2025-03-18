@@ -1,9 +1,7 @@
 <script setup lang="ts">
 import { z } from 'zod'
 import type { FormSubmitEvent } from '#ui/types'
-import { useI18n } from 'vue-i18n'
 
-const AwsWafIntegration = window.AwsWafIntegration;
 const runtimeConfig = useRuntimeConfig();
 const { t } = useI18n();
 
@@ -57,28 +55,11 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     if (isPending.value) return;
     isPending.value = true;
 
-    // Get WAF token
-    let wafToken = '';
-    if (AwsWafIntegration) {
-        const hasToken = await AwsWafIntegration.hasToken();
-        if (!hasToken) {
-            wafToken = await AwsWafIntegration.getToken();
-        } else {
-            wafToken = await AwsWafIntegration.getToken();
-        }
-    }
-
-    if (!wafToken) {
-        toast.add({ title: t('noti-unknown-exception'), icon: "i-heroicons-x-circle" });
-        return;
-    }
-
     try {
         const { data, error } = await useFetch(`${runtimeConfig.public.apiBase}/api/v1/auth/register${auth.getParams}`, {
             method: 'POST',
             headers: {
-                'csrf-token': auth.csrf,
-                'x-waf-token': wafToken,
+                'csrf-token': auth.csrf
             },
             body: {
                 username: auth.codeVerification.email,
@@ -124,22 +105,6 @@ async function resendCode() {
     isPending.value = true;
     
     try {
-        // Get WAF token
-        let wafToken = '';
-        if (AwsWafIntegration) {
-            const hasToken = await AwsWafIntegration.hasToken();
-            if (!hasToken) {
-                wafToken = await AwsWafIntegration.getToken();
-            } else {
-                wafToken = await AwsWafIntegration.getToken();
-            }
-        }
-
-        if (!wafToken) {
-            toast.add({ title: t('noti-unknown-exception'), icon: "i-heroicons-x-circle" });
-            return;
-        }
-        
         const formData = {
             username: auth.codeVerification.email,
         }
@@ -149,8 +114,7 @@ async function resendCode() {
         }>(`${runtimeConfig.public.apiBase}/api/v1/auth/resend-code-verify-email${auth.getParams}`, {
             method: "POST",
             headers: {
-                'csrf-token': auth.csrf,
-                'x-waf-token': wafToken,
+                'csrf-token': auth.csrf
             },
             body: formData,
             credentials: 'include',
