@@ -61,6 +61,7 @@ export async function reCheckWAFToken() {
     const auth = useAuthStore();
     try {
         if (!(await hasWAFToken())) {
+            throw new Error('test');
             await setWAFToken();
         }
     } catch (error) {
