@@ -60,8 +60,8 @@ export async function hasWAFToken(): Promise<boolean> {
 export async function reCheckWAFToken() {
     const auth = useAuthStore();
     try {
+        throw new Error('test');
         if (!(await hasWAFToken())) {
-            throw new Error('test');
             await setWAFToken();
         }
         return true;
