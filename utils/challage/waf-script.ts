@@ -58,8 +58,22 @@ export async function hasWAFToken(): Promise<boolean> {
 }
 
 export async function reCheckWAFToken() {
-    if (!(await hasWAFToken())) {
-        await setWAFToken();
+    const auth = useAuthStore();
+    try {
+        if (!(await hasWAFToken())) {
+            await setWAFToken();
+        }
+    } catch (error) {
+        auth.setCaptchaIsShow(true);
+        await nextTick();
+        try {
+            showCaptcha((token: string) => {
+                auth.setCaptchaIsShow(false);
+                auth.setWAFToken(token);
+            });
+        } catch (error) {
+            console.error('Error showing captcha:', error);
+        }
     }
 }
 
