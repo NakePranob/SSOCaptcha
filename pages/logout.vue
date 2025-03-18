@@ -13,7 +13,7 @@ onMounted(async () => {
             description: 'noti-success-logout-description'
         })
     } else {
-        navigateTo(`${runtimeConfig.public.apiBase}/api/v1/auth/logout?client_id=${auth.getClientId}&logout_uri=${auth.getLogoutUri}`, { external: true});
+        navigateTo(`${runtimeConfig.public.apiBaseUrl}/auth/logout?client_id=${auth.getClientId}&logout_uri=${auth.getLogoutUri}`, { external: true});
     }
 })
 </script>

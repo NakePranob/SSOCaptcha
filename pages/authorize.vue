@@ -17,7 +17,7 @@ const auth = useAuthStore();
 definePageMeta({ layout: false })
 
 const Navigate = () => {
-    window.location.href = `${runtimeConfig.public.apiBaseUrl}/api/v1/auth/authorize${auth.getParams}`;
+    navigateTo(`${runtimeConfig.public.apiBaseUrl}/auth/authorize${auth.getParams}`, { external: true});
 }
 
 onMounted(async () => {
