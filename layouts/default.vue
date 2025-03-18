@@ -27,7 +27,6 @@ onMounted(async () => {
     try {
         await Promise.all([loadAwsWafIntegrationScript(), loadAwsWafCaptchaScript()]);
         try {
-            throw new Error('test');
             await setWAFToken();
         } catch (error) {
             console.error('Error getting WAF Token:', error);

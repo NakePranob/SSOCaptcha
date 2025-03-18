@@ -38,10 +38,11 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     
     try {
         const isWAFTokenValid = await reCheckWAFToken();
-        console.log("isWAFTokenValid", isWAFTokenValid)
         if (!isWAFTokenValid) {
+            toast.add({ title: t('noti-unknown-exception'), icon: "i-heroicons-x-circle" });
             return;
         }
+        
         const { data, error } = await useFetch<{
             message: string;
             session_id: string;
