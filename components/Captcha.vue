@@ -10,7 +10,7 @@ const auth = useAuthStore();
             <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 -z-10">
                 <UCircular size="24" color="#E91C21"/>
             </div>
-            <div id="captcha-container" class="absolute bg-white"></div>
+            <div id="captcha-container" class="relative bg-white"></div>
         </div>
     </UModal>
 </template>
