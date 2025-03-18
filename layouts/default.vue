@@ -1,14 +1,14 @@
 <script setup lang="ts">
-import sleep from '~/utils/sleep';
+import sleep from '@/utils/sleep';
 import { useI18n } from 'vue-i18n';
-import { getCSRF } from '~/utils/csrf/get-token';
-import { getPolicy } from '~/utils/policy/getPolicy';
+import { getCSRF } from '@/utils/csrf/get-token';
+import { getPolicy } from '@/utils/policy/getPolicy';
 import { 
     showCaptcha, 
     loadAwsWafCaptchaScript, 
     loadAwsWafIntegrationScript, 
     setWAFToken 
-} from '~/utils/challage/aws-waf-script';
+} from '@/utils/challage/aws-waf-script';
 
 // i18n
 const { locale, setLocale, getLocaleCookie } = useI18n();
@@ -33,7 +33,6 @@ onMounted(async () => {
     try {
         await Promise.all([loadAwsWafIntegrationScript(), loadAwsWafCaptchaScript()]);
         try {
-            throw new Error('test');
             await setWAFToken();
         } catch (error) {
             console.error('Error getting WAF Token:', error);

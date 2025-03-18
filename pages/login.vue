@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import sleep from '~/utils/sleep';
+import sleep from '@/utils/sleep';
 
 const global = useGlobalStore();
 const pageView = usePageViewStore();

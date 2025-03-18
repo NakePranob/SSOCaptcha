@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { isValidWAFToken } from '@/utils/challage/aws-waf-script';
 import { z } from 'zod'
 import type { FormSubmitEvent } from '#ui/types'
 
@@ -56,11 +57,16 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     isPending.value = true;
 
     try {
-        const { data, error } = await useFetch(`${runtimeConfig.public.apiBase}/api/v1/auth/register${auth.getParams}`, {
+        // Check WAF Token
+        const isWAFTokenValid = await isValidWAFToken();
+        if (!isWAFTokenValid) {
+            toast.add({ title: t('noti-unknown-exception'), icon: "i-heroicons-x-circle" });
+            return;
+        }
+        
+        // Send request to server
+        const { data, error } = await useFetch(`/auth/register${auth.getParams}`, {
             method: 'POST',
-            headers: {
-                'csrf-token': auth.csrf
-            },
             body: {
                 username: auth.codeVerification.email,
                 password: auth.codeVerification.password,
@@ -105,18 +111,22 @@ async function resendCode() {
     isPending.value = true;
     
     try {
-        const formData = {
-            username: auth.codeVerification.email,
+        // Check WAF Token
+        const isWAFTokenValid = await isValidWAFToken();
+        if (!isWAFTokenValid) {
+            toast.add({ title: t('noti-unknown-exception'), icon: "i-heroicons-x-circle" });
+            return;
         }
+        
+        // Send request to server
         const { data, error } = await useFetch<{
             session_id: string,
             message: string,
-        }>(`${runtimeConfig.public.apiBase}/api/v1/auth/resend-code-verify-email${auth.getParams}`, {
+        }>(`/auth/resend-code-verify-email${auth.getParams}`, {
             method: "POST",
-            headers: {
-                'csrf-token': auth.csrf
+            body: {
+                username: auth.codeVerification.email,
             },
-            body: formData,
             credentials: 'include',
         });
 

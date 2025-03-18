@@ -1,5 +1,6 @@
 <script setup lang="ts">
 // import
+import { isValidWAFToken } from '@/utils/challage/aws-waf-script';
 import { z } from 'zod';
 import type { FormSubmitEvent } from '#ui/types';
 import { useI18n } from 'vue-i18n'
@@ -40,13 +41,18 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     isPending.value = true;
 
     try {
+        // Check WAF Token
+        const isWAFTokenValid = await isValidWAFToken();
+        if (!isWAFTokenValid) {
+            toast.add({ title: t('noti-unknown-exception'), icon: "i-heroicons-x-circle" });
+            return;
+        }
+        
+        // Send request to server
         const { data, error } = await useFetch<{
             redirectUrl: string;
-        }>(`${runtimeConfig.public.apiBase}/api/v1/auth/respond-to-challenge${auth.getParams}`, {
+        }>(`/auth/respond-to-challenge${auth.getParams}`, {
             method: 'POST',
-            headers: {
-                'csrf-token': auth.csrf
-            },
             body: {
                 username: auth.otp.email,
                 password: auth.otp.password,
@@ -112,14 +118,19 @@ async function resendOTP() {
     isPending.value = true;
 
     try {
+        // Check WAF Token
+        const isWAFTokenValid = await isValidWAFToken();
+        if (!isWAFTokenValid) {
+            toast.add({ title: t('noti-unknown-exception'), icon: "i-heroicons-x-circle" });
+            return;
+        }
+        
+        // Send request to server
         const { data, error } = await useFetch<{
             challengeName: string,
             session: string,
-        }>(`${runtimeConfig.public.apiBase}/api/v1/auth/login${auth.getParams}`, {
+        }>(`/auth/login${auth.getParams}`, {
             method: 'POST',
-            headers: {
-                'csrf-token': auth.csrf
-            },
             credentials: 'include',
             body: {
                 username: auth.otp.email,

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 // import
+import { isValidWAFToken } from '@/utils/challage/aws-waf-script';
 import type { FormError, FormSubmitEvent } from '#ui/types'
 import { validatePasswordPolicy } from '@/utils/validate/password-policy' 
 import { useAuthStore } from '@/stores/auth'
@@ -92,13 +93,18 @@ async function onSubmit(event: FormSubmitEvent<any>) {
     isPending.value = true;
 
     try {
+        // Check WAF Token
+        const isWAFTokenValid = await isValidWAFToken();
+        if (!isWAFTokenValid) {
+            toast.add({ title: t('noti-unknown-exception'), icon: "i-heroicons-x-circle" });
+            return;
+        }
+        
+        // Send request to server
         const { data, error } = await useFetch<{ 
             redirectUrl: string 
-        }>(`${runtimeConfig.public.apiBase}/api/v1/auth/force-change-password${auth.getParams}`, {
+        }>(`/auth/force-change-password${auth.getParams}`, {
             method: 'POST',
-            headers: {
-                'csrf-token': auth.csrf
-            },
             body: {
                 session: auth.changPassword.session,
                 username: auth.changPassword.email,

@@ -61,7 +61,6 @@ export async function hasWAFToken(): Promise<boolean> {
 export async function isValidWAFToken() {
     const auth = useAuthStore();
     try {
-        throw new Error('test');
         if (!(await hasWAFToken())) {
             await setWAFToken();
         }

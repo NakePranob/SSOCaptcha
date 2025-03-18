@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { z } from 'zod'
 import type { FormSubmitEvent } from '#ui/types'
-import { isValidWAFToken } from '~/utils/challage/aws-waf-script';
+import { isValidWAFToken } from '@/utils/challage/aws-waf-script';
 const { t } = useI18n();
 const runtimeConfig = useRuntimeConfig();
 

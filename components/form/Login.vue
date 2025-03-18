@@ -1,5 +1,6 @@
 <script setup lang="ts">
 // import
+import { isValidWAFToken } from '@/utils/challage/aws-waf-script';
 import { validatePasswordPolicy } from '@/utils/validate/password-policy'
 import { validateEmail, isValidInternalEmail } from '@/utils/validate/email'
 import type { FormError, FormSubmitEvent } from '#ui/types'
@@ -92,16 +93,21 @@ const onSubmit = async (event: FormSubmitEvent<{
     }
 
     try {
+        // Check WAF Token
+        const isWAFTokenValid = await isValidWAFToken();
+        if (!isWAFTokenValid) {
+            toast.add({ title: t('noti-unknown-exception'), icon: "i-heroicons-x-circle" });
+            return;
+        }
+        
+        // Send request to server
         const { data, error } = await useFetch<{ 
             session?: string, challengeName?: string 
         } | {
             message?: string,
             redirectUrl?: string
-        }>(`${runtimeConfig.public.apiBase}/api/v1/auth/login${auth.getParams}`, {
+        }>(`/auth/login${auth.getParams}`, {
             method: 'POST',
-            headers: {
-                'csrf-token': auth.csrf
-            },
             credentials: 'include',
             body: {
                 username: event.data.email,

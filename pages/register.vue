@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import sleep from '~/utils/sleep';
+import sleep from '@/utils/sleep';
 const pageView = usePageViewStore();
 const element = useElementStore();
 const bodyHeight = ref();

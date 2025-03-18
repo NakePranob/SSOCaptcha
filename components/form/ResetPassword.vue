@@ -2,8 +2,7 @@
 import { z } from 'zod'
 import type { FormSubmitEvent, FormError } from '#ui/types'
 import { validatePasswordPolicy } from '@/utils/validate/password-policy'
-const { t } = useI18n();
-const runtimeConfig = useRuntimeConfig();
+import { isValidWAFToken } from '@/utils/challage/aws-waf-script';
 
 const OTP_CODE_LENGTH = useGlobalStore().config?.OTP_CODE_LENGTH ?? 6;
 const auth = useAuthStore();
@@ -59,13 +58,18 @@ async function onSubmit(event: FormSubmitEvent<any>) {
     isPending.value = true;
 
     try {
+        // Check WAF Token
+        const isWAFTokenValid = await isValidWAFToken();
+        if (!isWAFTokenValid) {
+            toast.add({ title: t('noti-unknown-exception'), icon: "i-heroicons-x-circle" });
+            return;
+        }
+        
+        // Send request to server
         const { data, error } = await useFetch<{
             redirectUrl: string;
-        }>(`${runtimeConfig.public.apiBase}/api/v1/auth/forgot-password${auth.getParams}`, {
+        }>(`/auth/forgot-password${auth.getParams}`, {
             method: 'POST',
-            headers: {
-                'csrf-token': auth.csrf
-            },
             body: {
                 username: auth.forgotPassword.email,
                 otp: event.data.code,
@@ -112,14 +116,19 @@ async function resendCode() {
     isPending.value = true;
     
     try {
+        // Check WAF Token
+        const isWAFTokenValid = await isValidWAFToken();
+        if (!isWAFTokenValid) {
+            toast.add({ title: t('noti-unknown-exception'), icon: "i-heroicons-x-circle" });
+            return;
+        }
+        
+        // Send request to server
         const { data, error } = await useFetch<{
             message: string;
             session_id: string;
-        }>(`${runtimeConfig.public.apiBase}/api/v1/auth/forgot-password${auth.getParams}`, {
+        }>(`/auth/forgot-password${auth.getParams}`, {
             method: 'POST',
-            headers: {
-                'csrf-token': auth.csrf
-            },
             body: {
                 username: auth.forgotPassword.email,
             },
