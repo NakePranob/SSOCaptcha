@@ -13,10 +13,7 @@ onMounted(async () => {
             description: 'noti-success-logout-description'
         })
     } else {
-        await nextTick();
-        if (auth.wafToken) {
-            navigateTo(`${runtimeConfig.public.apiBaseUrl}/auth/logout?client_id=${auth.getClientId}&logout_uri=${auth.getLogoutUri}`, { external: true});
-        }
+        navigateTo(`${runtimeConfig.public.apiBaseUrl}/auth/logout?client_id=${auth.getClientId}&logout_uri=${auth.getLogoutUri}`, { external: true});
     }
 })
 </script>
