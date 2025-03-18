@@ -4,6 +4,8 @@ import type { FormSubmitEvent, FormError } from '#ui/types'
 import { validatePasswordPolicy } from '@/utils/validate/password-policy'
 import { isValidWAFToken } from '@/utils/challage/aws-waf-script';
 
+const { t } = useI18n();
+
 const OTP_CODE_LENGTH = useGlobalStore().config?.OTP_CODE_LENGTH ?? 6;
 const auth = useAuthStore();
 const countdown = useCountdownStore();
