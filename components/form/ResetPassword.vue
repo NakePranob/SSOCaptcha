@@ -41,7 +41,7 @@ const passwordPolicyStyle = computed(() => ({
 const validate = (state: any): FormError[] => {
     const errors = []
     if (!state.code) errors.push({ path: 'code', message: t('code-policy-required') })
-    if (state.code.length < OTP_CODE_LENGTH) errors.push({ path: 'code', message: t('code-policy-length', {length: OTP_CODE_LENGTH}) })
+    if (state.code && state.code.length < OTP_CODE_LENGTH) errors.push({ path: 'code', message: t('code-policy-length', {length: OTP_CODE_LENGTH}) })
     let errorsPassword = validatePasswordPolicy(state.password)
     if (state.password != state.c_password && state.password) {
         errorsPassword.push({ path: 'c_password', message: 'Password not match' })
