@@ -65,8 +65,6 @@ const { pending, error } = useAsyncData("policy", async () => {
         }
     
         const { passwordPolicy, globalConfig } = await getPolicy();
-
-        console.log(passwordPolicy, globalConfig);
         
         if (passwordPolicy) {
             form.setPasswordPolicy({

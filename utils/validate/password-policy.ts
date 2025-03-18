@@ -10,28 +10,22 @@ export function validatePasswordPolicy(input: InputPassword) {
         RequireNumbers: false,
         MinimumLength: 8,
         RequireSymbols: false,
-    };;
+    };
 
-    if (passwordPolicy.RequireLowercase && !/[a-z]/.test(input)) {
-        errors.push({ path: 'password', message: 'Password must contain a lower case letter' });
-    }
-    if (passwordPolicy.RequireUppercase && !/[A-Z]/.test(input)) {
-        errors.push({ path: 'password', message: 'Password must contain an upper case letter' });
-    }
-    if (passwordPolicy.RequireNumbers && !/\d/.test(input)) {
-        errors.push({ path: 'password', message: 'Password must contain a number' });
-    }
-    if (!input || typeof input !== "string") {
-        errors.push({ path: "password", message: `Password must contain at least ${form.passwordPolicy.MinimumLength} characters` });
-    } else if (input.length < passwordPolicy.MinimumLength) {
-        errors.push({ path: "password", message: `Password must contain at least ${form.passwordPolicy.MinimumLength} characters` });
-    }
-    if (passwordPolicy.RequireSymbols && !regex.test(input)) {
-        errors.push({ path: 'password', message: 'Password must contain a special character or a space' });
-    }
-    if (/^\s|\s$/.test(input)) {
-        errors.push({ path: 'password', message: 'Password must not contain a leading or trailing space' });
-    }
+    const checks = [
+        { condition: passwordPolicy.RequireLowercase && !/[a-z]/.test(input), message: 'Password must contain a lower case letter' },
+        { condition: passwordPolicy.RequireUppercase && !/[A-Z]/.test(input), message: 'Password must contain an upper case letter' },
+        { condition: passwordPolicy.RequireNumbers && !/\d/.test(input), message: 'Password must contain a number' },
+        { condition: !input || typeof input !== "string" || input.length < passwordPolicy.MinimumLength, message: `Password must contain at least ${passwordPolicy.MinimumLength} characters` },
+        { condition: passwordPolicy.RequireSymbols && !regex.test(input), message: 'Password must contain a special character or a space' },
+        { condition: /^\s|\s$/.test(input), message: 'Password must not contain a leading or trailing space' }
+    ];
+
+    checks.forEach(check => {
+        if (check.condition) {
+            errors.push({ path: 'password', message: check.message });
+        }
+    });
 
     return errors;
 }

@@ -1,4 +1,3 @@
 export function toEmailFormatted(email: string) {
-    const trimmedEmail = email.trim();
-    return trimmedEmail
+    return email.trim();
 }

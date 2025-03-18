@@ -7,7 +7,6 @@ export async function getPolicy(): Promise<{
         global: MAuthenConfiguration;
     }>('/auth/policy');
 
-
     return {
         passwordPolicy: password,
         globalConfig: global,
